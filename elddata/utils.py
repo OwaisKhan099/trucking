@@ -4,7 +4,8 @@ from .models import EldData, HOSViolation
 def detect_hos_violations(driverId):
     eld_records = EldData.objects.filter(driverId=driverId).order_by("-timestamp")
     #eld_records = EldData.objects.filter(driverId=driverId).un
-
+    driverIds = EldData.objects.values_list('driverId', flat=True)
+    print(driverIds)
     driving_time = timedelta()
     on_duty_time = timedelta()
     violations = []
@@ -29,7 +30,13 @@ def detect_hos_violations(driverId):
         elif record.status == 'On_DUTY':
 
                 on_duty_time += (datetime.now(timezone.utc)- date_obj)
-
+        elif record.status == 'Off_DUTY':
+            violations.append(HOSViolation(
+                driverId=driverId,
+                violation_time=record.timestamp,
+                violation_type='No Violation',
+                description='Currently driver is off line. So, there is not any violation possible right now'
+            ))
         else:
             violations.append(HOSViolation(
                 driverId=driverId,
@@ -55,7 +62,7 @@ def detect_hos_violations(driverId):
                 violation_type='14-hour on-duty limit',
                 description='Exceeded 14-hour on-duty limit'
             ))
-        else:
+        elif driving_time or on_duty_time:
             violations.append(HOSViolation(
                 driverId=driverId,
                 violation_time=record.timestamp,

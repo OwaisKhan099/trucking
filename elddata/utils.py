@@ -73,3 +73,5 @@ def detect_hos_violations(driverId):
         HOSViolation.objects.bulk_create(violations)
         return violations
 
+
+
